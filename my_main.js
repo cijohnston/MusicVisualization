@@ -28,18 +28,29 @@ window.onload = function() {
         var fq = avg(frequencyData);
         
         ctx.fillStyle = '#F0F8FF';
-        ctx.fillRect(20,20,255,255);
-        ctx.fillStyle = '#000000';
-        ctx.fillRect(20,20,fq,fq);
+        ctx.fillRect(0,0,1024,520);
         
-        //console.log(avg(frequencyData));
+        ctx.fillStyle = '#000000';
+        for (var i = 0; i<frequencyData.length;i++){
+            ctx.fillRect(i,520-2*frequencyData[i],1,2*frequencyData[i]);
+        }
+            
+        //console.log(frequencyData.length);
         
         
     }
     audio.play();
     renderFrame();
+/*
+    document.getElementById("fButton").onclick = function(e){
+    audio.play();
+    renderFrame();
+}
+ */
 };
 
+
+ 
 function avg(data){
     var sum = 0;
     for (var i = 0; i<data.length;i++){
