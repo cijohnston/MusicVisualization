@@ -2,7 +2,6 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext || window
 
 var myCanvas = document.getElementById('main_canvas');
 var ctx = myCanvas.getContext('2d');
-var j = 0;
 
 window.onload = function() {
     var audioCtx = new AudioContext();
@@ -28,22 +27,15 @@ window.onload = function() {
         //take average of all frequaency wave levels
         var fq = avg(frequencyData);
         
-        //ctx.fillStyle = '#F0F8FF';
-        //ctx.fillRect(0,0,1024,520);
+        ctx.fillStyle = '#F0F8FF';
+        ctx.fillRect(0,0,1024,520);
         
         ctx.fillStyle = '#000000';
-        
-        j++;
-        var max = 0;
-        
-        for (var i = 0; i<520;i++){
-            ctx.fillStyle = colorize(frequencyData[i+100]);
-            ctx.fillRect(j*2,520-i,2,1);
-            if (frequencyData[i]>max){
-                max = frequencyData[i];
-            }
-            
+        for (var i = 0; i<frequencyData.length;i++){
+            ctx.fillRect(i,520-2*frequencyData[i],1,2*frequencyData[i]);
         }
+            
+        //console.log(frequencyData.length);
         
         
     }
@@ -65,15 +57,5 @@ function avg(data){
         sum +=data[i];
     }
     return Math.round(sum/data.length);
-}
-
-function colorize(data){
-    var d2 = data * 99/(255);
-    //var d2 = d1 * d1
-    var d3 = parseInt(d2+"",10);
-    var d4 = 99 - d3;
-    //var d5 = parseInt((d4 / 2)+"",10);
-    //if (d4<0) d4 = 0;
-    return "#00" /*+ d4 + d4*/ + d4 + "00";
 }
 
