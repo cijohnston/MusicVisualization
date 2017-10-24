@@ -52,6 +52,7 @@ window.onload = function() {
             }
             var salient = spectralPeak(reduce,i,elFrequencyData);
             ctx.fillStyle = colorize(salient);
+            console.log(colorize(salient));
             ctx.fillRect(j*2,520-i,2,1);
             if (elFrequencyData[i]>max){
                 max = elFrequencyData[i+100];
@@ -76,6 +77,8 @@ function spectralPeak(peak,index,data){
     for(var i=1;i<5;i++){
         if(peak<data[index-i]||peak<data[index+i]){
             result = 0;
+        } else {
+            result = 255;
         }
     }
     return result;
