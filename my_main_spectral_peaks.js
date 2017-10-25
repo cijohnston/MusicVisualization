@@ -36,30 +36,36 @@ window.onload = function() {
         
         ctx.fillStyle = '#000000';
         
+        //code to draw black rectangle
+        var rectW = 1024
         j+=1;
-        if (j>600){
+        if (j>rectW/2){ //the max has to be half or less of rec width
             j=0;
-            ctx.fillRect(0,0,1024,520);
+            ctx.fillRect(0,0,rectW,625);
         }
         var max = 0;
         
-        var elFrequencyData = equalLoudness(frequencyData);
+        var elFrequencyData = equalLoudness(frequencyData); //apply the equal loudness filter
         //console.log(elFrequencyData);
-        for (var i = 0; i<525;i++){
-            var reduce = elFrequencyData[i+100];
+        for (var i = 0; i<525;i++){ //cutting off at 625 and 100
+            
+            var reduce = elFrequencyData[i+100]; 
             if (reduce<0){
                 reduce=0;
             }
-            var salient = spectralPeak(reduce,i,elFrequencyData);
-            ctx.fillStyle = colorize(salient);
-            console.log(colorize(salient));
-            ctx.fillRect(j*2,520-i,2,1);
+
+            var salient = spectralPeak(reduce,i+100,elFrequencyData);
+            if (salient != 0){
+                ctx.fillStyle = colorize(salient);
+                ctx.fillRect(j*2,520-i,2,5);
+            }
+            //calculating max for particular moment in time
             if (elFrequencyData[i]>max){
                 max = elFrequencyData[i+100];
             }
         }
         
-        console.log(max);
+        //console.log(max);
     }
     audio.play();
     renderFrame();
@@ -74,11 +80,9 @@ window.onload = function() {
 
 function spectralPeak(peak,index,data){
     result = peak;
-    for(var i=1;i<5;i++){
+    for(var i=1;i<20;i++){
         if(peak<data[index-i]||peak<data[index+i]){
             result = 0;
-        } else {
-            result = 255;
         }
     }
     return result;
