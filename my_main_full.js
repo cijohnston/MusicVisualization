@@ -2,14 +2,20 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext || window
 
 var myCanvas = document.getElementById('main_canvas');
 var ctx = myCanvas.getContext('2d');
+//var startButton
 var j = 0;
 //var frequenciesBuffer = new ArrayBuffer(8);
 //var totalFreq = new Uint8Array();
 var totalFreq = new Array();
+var gameNotes = new Array();
+var prevNote = 0;
+var place = 1;
 
-window.onload = function() {
+//window.onload = function() {
+function startFunction(){
     var audioCtx = new AudioContext();
     var audio = document.getElementById('audio');
+    audio.src = URL.createObjectURL(document.getElementById("audioSrc").files[0]);
     var audioSrc = audioCtx.createMediaElementSource(audio);
     var analyser = audioCtx.createAnalyser();
     analyser.fftSize = 2048;
@@ -31,9 +37,18 @@ window.onload = function() {
     
     //var audioSoundCtx = new AudioContext();
     var audioSound = document.getElementById('audioSound');
+    audioSound.src = URL.createObjectURL(document.getElementById("audioSrc").files[0]);
     //var audioSoundSrc = audioCtx.createMediaElementSource(audioSound);
-    
-    
+    /*
+    var canvasSet = new Array();
+    for (var i = 0; i<260; i++){
+        var nuCanvas = document.createElement('canvas');
+        nuCanvas.id = "canvas"+i;
+        nuCanvas.width = 1200;
+        nuCanvas.height = 2;
+        canvasSet.push(nuCanvas);
+    }
+    */
     
     // we're ready to receive some data!
     // loop
@@ -50,13 +65,14 @@ window.onload = function() {
         //ctx.fillStyle = '#F0F8FF';
         //ctx.fillRect(0,0,1024,520);
         
-        ctx.fillStyle = '#000000';
-        
-        j+=1;
+        //ctx.fillStyle = '#000000';
+        /*
+        j+=2;
         if (j>600){
             j=0;
             ctx.fillRect(0,0,1200,this.height/2);
         }
+         */
         var max = 0;
         
         var elFrequencyData = equalLoudness(frequencyData);
@@ -98,23 +114,45 @@ window.onload = function() {
         }
         totalFreq[totalFreq.length-5] = nuSpecGraph;
         reduceNoise();
+        simplify();
+        /*
+        for (var i = 0;i<259;i++){
+            canvasSet[i+1] = canvasSet[i];
+            console.log(canvasSet[i].id)
+        }*/
         if(totalFreq.length>20){
-            for (var i = 100; i<this.height;i++){
-              //  for (var k = 0; k< Math.min(this.height,totalFreq.length-20)/4;k++){
+            
+            //for (var i = 100; i<this.height;i++){
+                //ctx = canvasSet[0].getContext('2d');
+                  for (var k = 0; k< Math.min(this.height,totalFreq.length-20/4);k++){
                 //if (avg(elFrequencyData.slice(i-10,i+10))<avg(elFrequencyData)){
-                    ctx.fillStyle = colorize(/*salienceFunction(i,*/
-                        totalFreq[totalFreq.length-20][i]/*)*/
-                    );
+               //     ctx.fillStyle = colorize(/*salienceFunction(i,*/
+               //         totalFreq[totalFreq.length-20-k][i]/*)*/
+               //     );
+                      //ctx.fillStyle = "#009900";
+                      //ctx.fillRect(gameNotes[totalFreq.length-16-k],k*4,2,4);
+                      console.log(gameNotes[totalFreq.length-16-k]);
+                      
+                      if(gameNotes[totalFreq.length-16-k]!=0) {
+                          ctx.fillStyle = "#009900";
+                          ctx.fillRect(gameNotes[totalFreq.length-16-k]*40,k*4,2*40,4);
+                          console.log(gameNotes[totalFreq.length-16-k]);
+                      }
+                      if (gameNotes[totalFreq.length-17-k]!=0) {
+                          ctx.fillStyle = "#000000";
+                          ctx.fillRect(gameNotes[totalFreq.length-17-k]*40,k*4,2*40,4);
+                      }
+                      
                 //}else{
                 //    ctx.fillStyle = colorize(0);
                 //}
                 //console.log(colorize(salient));
                 //    ctx.fillRect(i-100,k*4,2,4);
-                ctx.fillRect((j)*2,this.height/2-150-(i/2),2,1);
+                //ctx.fillRect((j),this.height/2-150-(i/2),2,1);
                 }
-            //}
+           // }
         }
-        if (totalFreq.length==250) audioSound.play();
+        if (totalFreq.length==20) audioSound.play();
         //console.log(max);
     }
     audio.play();
@@ -132,6 +170,42 @@ function concatTypedArrays(a, b) { // a, b TypedArray of same type
     c.set(a, 0);
     c.set(b, a.length);
     return c;
+}
+
+function simplify(){
+    if (totalFreq.length<20)return 0;
+    var right = totalFreq.length-1;
+    var left = totalFreq.length-15;
+    for (var k = 0; k<this.height;k++){
+        if (totalFreq[right][k]==0&&totalFreq[right-1][k]!=0){
+            for(var i = right; i > left; i--){
+                if(totalFreq[i-1][k]!=0){
+                    totalFreq[i][k]= 0;
+                }else{
+                    break;
+                }
+            }
+        }
+    }
+    gameNotes[totalFreq.length-15] = 0;
+    for(var k = 0; k<this.height;k++){
+        if (totalFreq[left][k]!=0){
+            gameNotes[totalFreq.length-15] = relationship(k);
+            prevNote = k;
+            place = gameNotes[totalFreq.length-15];
+        }
+    }
+    
+}
+
+function relationship(k){
+    if(k>prevNote){
+        return Math.min(4,place+1);
+    } else if (k<prevNote){
+        return Math.max(1,place-1);
+    } else {
+        return place;
+    }
 }
 
 function reduceNoise(){
@@ -176,7 +250,7 @@ function reduceNoise(){
             max = scenePitches[i];
         }
     }
-    console.log(max.k);
+    //console.log(max.k);
     var nuFreq = Array.apply(null, Array(totalFreq[totalFreq.length-10].length)).map(Number.prototype.valueOf,0);
     for (var k = Math.max(0,max.k-10); k<Math.min(max.k+10,this.height);k++){
         //for(var i = right;i> left ;i--){
@@ -305,35 +379,7 @@ var b = [
          -0.00881362733839
 ]
  
-/*
-var a = [
-         1.00000000000000,
-         -3.47845948550071,
-         6.36317777566148,
-         -8.54751527471874,
-         9.47693607801280,
-         -8.81498681370155,
-         6.85401540936998,
-         -4.39470996079559,
-         2.19611684890774,
-         -0.75104302451432,
-         0.13149317958808
-         ]
 
-var b = [
-         0.05418656406430,
-         -0.02911007808948,
-         -0.00848709379851,
-         -0.00851165645469,
-         -0.00834990904936,
-         0.02245293253339,
-         -0.02596338512915,
-         0.01624864962975,
-         -0.00240879051584,
-         0.00674613682247,
-         -0.00187763777362
-         ]
-*/
 function avg(data){
     var sum = 0;
     for (var i = 0; i<data.length;i++){
